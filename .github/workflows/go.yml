@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ "main" ]
   # 注意：cron 表达式最短间隔是 5 分钟，'1/5' 可能不符合标准格式，建议用 '*/5'
-  worworkflow_dispatch: 
+  workflow_dispatch: 
 
 jobs:
   build:
