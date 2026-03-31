@@ -13,8 +13,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        repository: 'webra2/webra2.github.io'
-        path: website
         token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Set up Go
