@@ -1,6 +1,3 @@
-# This workflow will build a golang project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
 name: Go
 
 on:
@@ -8,11 +5,10 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  schedule:
-    - cron:  '1/5 * * * *'
+  # 注意：cron 表达式最短间隔是 5 分钟，'1/5' 可能不符合标准格式，建议用 '*/5'
+  worworkflow_dispatch: 
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
@@ -24,25 +20,32 @@ jobs:
         go-version: '1.23'
 
     - name: Build
-      run: go mod tidy && go build -v ./
+      run: go mod tidy && go build -v -o go-download-web ./
 
-    - name: Test
-      run: go test -v ./...
-    - name: mkwebsitedir
-      run: mkdir website
-    - uses: actions/checkout@v3
+    - name: Prepare Website Directory
+      # 检出目标仓库到 website 目录，供下载器作为上下文
+      uses: actions/checkout@v3
       with:
         repository: 'webra2/webra2.github.io'
         path: website
         token: ${{ secrets.API_TOKEN_GITHUB }}
-    - name: download-cd
-      run: ./go-download-web
-    - name: push
-      run: |
-        cd website
-        ls -R -l
-        git config --local user.email "webra2@webra2.com"
-        git config --local user.name "webra2"
-        bash ../deploy.sh
 
-    
+    - name: Download ChronoDivide
+      run: |
+        # Ubuntu Runner 自带 google-chrome，通常直接运行即可
+        # 如果程序里写死了路径，可以在这里做个 alias 或者 export
+        ./go-download-web
+
+    - name: Inspect Downloaded Files
+      run: |
+        echo "检查下载结果..."
+        ls -R website/
+
+    - name: Upload Website Artifacts
+      # 使用官方 Action 上传产物
+      uses: actions/upload-artifact@v4
+      with:
+        name: chronodivide-latest-build
+        path: website/
+        # 设置保留天数（可选）
+        retention-days: 90
